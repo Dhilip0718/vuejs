@@ -1,10 +1,10 @@
 <template>
   <div class="container">
-    <p>CHECK RENDER {{ selectedNode }}</p>
     <div id="graph"></div>
     <div v-if="dataLoaded">
       <div class="node-details">
         <h3>{{ selectedNode.name }}</h3>
+        <span class="deselect-icon" @click="deselectNode">x</span>
         <p>123</p>
         <p>{{ selectedNode.description }}</p>
       </div>
@@ -61,7 +61,6 @@ export default {
       const root = d3.hierarchy(data[0]);
       treeLayout(root);
 
-      // const links = svg.selectAll('.link').data(root.links()).enter().append('path') // Removed unused variable
       svg
         .selectAll('.link')
         .data(root.links())
@@ -83,7 +82,7 @@ export default {
         .append('g')
         .attr('class', 'node')
         .attr('transform', d => `translate(${d.y},${d.x})`)
-        .each(function(d) {
+        .each(function (d) {
           this.nodeData = d;
         })
         .on('click', this.handleNodeClick);
@@ -102,7 +101,7 @@ export default {
 
       this.graphRendered = true;
     },
-    handleNodeClick(event) { // Removed unused data parameter
+    handleNodeClick(event) {
       const g = event.currentTarget;
       const nodeData = g.nodeData.data;
 
@@ -122,6 +121,28 @@ export default {
           }));
           Vue.set(this.selectedNode, 'children', updatedChildren);
         }
+      }
+    },
+    deselectNode() {
+      if (this.selectedNode) {
+        const selectedNodeName = this.selectedNode.name; // Store selectedNode.name
+
+        d3.selectAll('.node').each((d, i, nodes) => { // Use arrow function
+          const currentNode = nodes[i]; // Get current DOM element
+          const currentNodeData = currentNode.nodeData; // Get current element nodeData
+
+          console.log('currentNodeData', currentNodeData);
+          console.log('selectedNodeName', selectedNodeName);
+
+          if (currentNodeData && currentNodeData.data && currentNodeData.data.name === selectedNodeName) {
+            console.log('Node deselected:', currentNodeData.data.name);
+            d3.select(currentNode).classed('selected-node', false);
+          }
+        });
+
+        this.selectedNode = null;
+        this.dataLoaded = false;
+        this.$nextTick(() => { });
       }
     },
   },
@@ -150,13 +171,23 @@ export default {
   padding: 10px;
   z-index: 100;
 }
+
 .container {
   display: flex;
   justify-content: center;
   align-items: center;
 }
+
 .selected-node circle {
   stroke: red;
   stroke-width: 3px;
+}
+
+.deselect-icon {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  cursor: pointer;
+  font-size: 14px;
 }
 </style>
