@@ -14,7 +14,7 @@
 
 <script>
 import * as d3 from 'd3';
-import Vue from 'vue'; // Import Vue
+import Vue from 'vue';
 
 export default {
   name: 'ChartData',
@@ -22,6 +22,7 @@ export default {
     return {
       selectedNode: null,
       dataLoaded: false,
+      graphRendered: false,
     };
   },
   mounted() {
@@ -38,6 +39,10 @@ export default {
       }
     },
     renderGraph(data) {
+      if (this.graphRendered) {
+        return;
+      }
+
       const width = 800;
       const height = 600;
       const nodeRadius = 20;
@@ -56,8 +61,8 @@ export default {
       const root = d3.hierarchy(data[0]);
       treeLayout(root);
 
-      // eslint-disable-next-line no-unused-vars
-      const links = svg
+      // const links = svg.selectAll('.link').data(root.links()).enter().append('path') // Removed unused variable
+      svg
         .selectAll('.link')
         .data(root.links())
         .enter()
@@ -78,6 +83,9 @@ export default {
         .append('g')
         .attr('class', 'node')
         .attr('transform', d => `translate(${d.y},${d.x})`)
+        .each(function(d) {
+          this.nodeData = d;
+        })
         .on('click', this.handleNodeClick);
 
       nodes
@@ -91,21 +99,28 @@ export default {
         .attr('x', d => (d.children ? -6 : 6))
         .attr('text-anchor', d => (d.children ? 'end' : 'start'))
         .text(d => d.data.name);
+
+      this.graphRendered = true;
     },
-    handleNodeClick(event, data) {
-      if (this.selectedNode && this.selectedNode.name === data.data.name) {
+    handleNodeClick(event) { // Removed unused data parameter
+      const g = event.currentTarget;
+      const nodeData = g.nodeData.data;
+
+      if (this.selectedNode && this.selectedNode.name === nodeData.name) {
         this.selectedNode = null;
         this.dataLoaded = false;
+        d3.select(g).classed('selected-node', false);
       } else {
-        this.selectedNode = data.data;
+        d3.selectAll('.selected-node').classed('selected-node', false);
+        this.selectedNode = nodeData;
         this.dataLoaded = true;
-        // Example: Update the children (replace with your actual logic)
+        d3.select(g).classed('selected-node', true);
+
         if (this.selectedNode.children) {
           const updatedChildren = this.selectedNode.children.map(child => ({
             ...child,
-            // Modify child properties as needed
           }));
-          Vue.set(this.selectedNode, 'children', updatedChildren); // Force reactivity
+          Vue.set(this.selectedNode, 'children', updatedChildren);
         }
       }
     },
@@ -139,6 +154,9 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  /* flex-direction: column; */
+}
+.selected-node circle {
+  stroke: red;
+  stroke-width: 3px;
 }
 </style>
