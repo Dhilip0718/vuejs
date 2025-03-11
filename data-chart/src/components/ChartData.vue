@@ -43,9 +43,9 @@ export default {
         return;
       }
 
-      const width = 800;
-      const height = 600;
-      const nodeRadius = 20;
+      const width = 900;
+      const height = 700;
+      const nodeRadius = 45;
 
       const svg = d3
         .select('#graph')
@@ -59,6 +59,7 @@ export default {
         .separation((a, b) => (a.parent == b.parent ? 1 : 2));
 
       const root = d3.hierarchy(data[0]);
+      console.log("Root Node Data:", root.data);
       treeLayout(root);
 
       svg
@@ -81,8 +82,8 @@ export default {
         .enter()
         .append('g')
         .attr('class', 'node')
-        .attr('transform', d => `translate(${d.y},${d.x})`)
-        .each(function (d) {
+        .attr('transform', d => `translate(${d.y + 50},${d.x})`)
+        .each(function(d) {
           this.nodeData = d;
         })
         .on('click', this.handleNodeClick);
@@ -94,8 +95,8 @@ export default {
 
       nodes
         .append('text')
-        .attr('dy', '0.31em')
-        .attr('x', d => (d.children ? -6 : 6))
+        .attr('dy', '0.41em')
+        .attr('x', d => (d.children ? 6 : -5))
         .attr('text-anchor', d => (d.children ? 'end' : 'start'))
         .text(d => d.data.name);
 
@@ -125,24 +126,20 @@ export default {
     },
     deselectNode() {
       if (this.selectedNode) {
-        const selectedNodeName = this.selectedNode.name; // Store selectedNode.name
+        const selectedNodeName = this.selectedNode.name;
 
-        d3.selectAll('.node').each((d, i, nodes) => { // Use arrow function
-          const currentNode = nodes[i]; // Get current DOM element
-          const currentNodeData = currentNode.nodeData; // Get current element nodeData
-
-          console.log('currentNodeData', currentNodeData);
-          console.log('selectedNodeName', selectedNodeName);
+        d3.selectAll('.node').each((d, i, nodes) => {
+          const currentNode = nodes[i];
+          const currentNodeData = currentNode.nodeData;
 
           if (currentNodeData && currentNodeData.data && currentNodeData.data.name === selectedNodeName) {
-            console.log('Node deselected:', currentNodeData.data.name);
             d3.select(currentNode).classed('selected-node', false);
           }
         });
 
         this.selectedNode = null;
         this.dataLoaded = false;
-        this.$nextTick(() => { });
+        this.$nextTick(() => {});
       }
     },
   },
@@ -171,18 +168,15 @@ export default {
   padding: 10px;
   z-index: 100;
 }
-
 .container {
   display: flex;
   justify-content: center;
   align-items: center;
 }
-
 .selected-node circle {
-  stroke: red;
+  stroke: blue;
   stroke-width: 3px;
 }
-
 .deselect-icon {
   position: absolute;
   top: 5px;
